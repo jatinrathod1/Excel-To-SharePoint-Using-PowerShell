@@ -42,7 +42,7 @@ Get-PnPWeb
 
 # 4)...Load Excel File and Read Data
 
-$ExcelFilePath = "C:\Users\91915\Downloads\Data 1.xlsx"
+$ExcelFilePath = "C:\Users\91915\Downloads\Data_1.xlsx"
 $ExcelData = Import-Excel -Path $ExcelFilePath
 
 # 5).. verify the excel data
@@ -57,40 +57,57 @@ $ListName = "MainList"
 
 foreach ($Row in $excelData) {
 
-    
-    $Title = $Row.'Expense ID';
-    $ExpenseCategory = $Row.'Expense Category';
-    $BudgetAllocated = [decimal]$Row.'Budget Allocated ($)'
-    $BudgetUtilization = $Row.'Budget Utilization(%)';
-    $PaymentMethod = $Row.'Payment Method';
-    $Status = $Row.Status;
-    $Department = $Row.Department;
-    $EmployeeID = $Row.'Employee ID';
-  
-    # Get the Department ID from the DepartmentList 
-    # "DepartmentList" is a MasterList or say Lookup Field List, so we need to get the ID of the Department from this list and then use it in the main list
-    # {     $Department    } is the value from the excel sheet, we need to get the ID of this value from the "DepartmentList" list and then use it in the main list
-    $departmentId = (Get-PnPListItem -List "DepartmentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Department</Value></Eq></Where></Query></View>").FieldValues["ID"]
+  $dateValue = $null
+  $approvalDateValue = $null
 
-    $expenseCategoryId = (Get-PnPListItem -List "ExpenseCategoryList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$ExpenseCategory</Value></Eq></Where></Query></View>").FieldValues["ID"]
+  # Correct date parsing with format dd/MM/yyyy
+  if ([string]::IsNullOrWhiteSpace($Row.Date) -eq $false) {
+    $dateValue = [datetime]::ParseExact($Row.Date, 'dd/MM/yyyy', $null)
+  }
+  if ([string]::IsNullOrWhiteSpace($Row.'Approval Date') -eq $false) {
+    $approvalDateValue = [datetime]::ParseExact($Row.'Approval Date', 'dd/MM/yyyy', $null)
+  }
 
-    $paymentId = (Get-PnPListItem -List "PaymentMethodList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$PaymentMethod</Value></Eq></Where></Query></View>").FieldValues["ID"]
-       
-    $StatusId = (Get-PnPListItem -List "Status" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Status</Value></Eq></Where></Query></View>").FieldValues["ID"]
+  $Title = $Row.'Expense ID';
+  $Date = $dateValue;
+  $ExpenseCategory = $Row.'Expense Category';
+  $Amount = $Row.'Amount ($)';
+  $BudgetAllocated = [decimal]$Row.'Budget Allocated ($)'
+  $BudgetUtilization = $Row.'Budget Utilization(%)';
+  $PaymentMethod = $Row.'Payment Method';
+  $Vendor = $Row.'Vendor/Supplier';
+  $Status = $Row.Status;
+  $ApprovalDate = $approvalDateValue;
+  $ApproverName = $Row.'Approver Name';
+  $Department = $Row.Department;
+  $EmployeeName = $Row.'Employee Name';
+  $EmployeeID = $Row.'Employee ID';
 
-    # Add the item to the list using the values from the excel sheet and the IDs from the lookup lists 
-    # Add-PnPListItem means we are adding a new item to the list.
-    Add-PnPListItem -List $listName -Values @{
-        "Title"             = $Title
-        "ExpenseCategory"   = $expenseCategoryId
-        "BudgetAllocated"   = $BudgetAllocated
-        "BudgetUtilization" = $BudgetUtilization
-        "PaymentMethod"     = $paymentId
-        "Status"            = $StatusId
-        "Department"        = $departmentId
-        "EmployeeID"        = $EmployeeID		
+  $expenseCategoryId = (Get-PnPListItem -List "ExpenseCategoryList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$ExpenseCategory</Value></Eq></Where></Query></View>").FieldValues["ID"]
 
-    }
+  $paymentId = (Get-PnPListItem -List "PaymentMethodList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$PaymentMethod</Value></Eq></Where></Query></View>").FieldValues["ID"]
+   
+  $StatusId = (Get-PnPListItem -List "Status" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Status</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
+  $departmentId = (Get-PnPListItem -List "DepartmentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Department</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
+  Add-PnPListItem -List $listName -Values @{
+    "Title"                 = $Title
+    "Date"                  = $Date
+    "ExpenseCategory"       = $expenseCategoryId
+    "Amount"                = $Amount
+    "BudgetAllocated"       = $BudgetAllocated
+    "BudgetUtilization"     = $BudgetUtilization
+    "PaymentMethod"         = $paymentId
+    "Vendor_x002f_Supplier" = $Vendor
+    "Status"                = $StatusId
+    "ApprovalDate"          = $ApprovalDate
+    "ApproverName"          = $ApproverName
+    "Department"            = $departmentId
+    "EmployeeName"          = $EmployeeName
+    "EmployeeID"            = $EmployeeID		
+
+  }
 }
 
 # 7)... Clean Up and Disconnect
