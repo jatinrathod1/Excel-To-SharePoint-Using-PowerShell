@@ -1,0 +1,25 @@
+# Import Excel data
+$ExcelFilePath = "C:\Users\User\Documents\data.xlsx"
+$ExcelData = Import-Excel -Path $ExcelFilePath
+
+# Define SharePoint List
+$ListName = "EmployeeList"
+
+foreach ($row in $ExcelData) {
+    $Name = $row.Name
+    $JobRole = $row.Job_Role
+    $Department = $row.Department
+    $Payment = $row.Payment
+    
+    # Lookup column handling
+    $DepartmentId = (Get-PnPListItem -List "DepartmentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Department</Value></Eq></Where></Query></View>").FieldValues["ID"]
+    $PaymentId = (Get-PnPListItem -List "PaymentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Payment</Value></Eq></Where></Query></View>").FieldValues["ID"]
+    
+    # Add or update SharePoint list item
+    Add-PnPListItem -List $ListName -Values @{
+        "Title" = $Name
+        "Job_Role" = $JobRole
+        "Department" = $DepartmentId
+        "Payment" = $PaymentId
+    }
+}
