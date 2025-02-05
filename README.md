@@ -1,4 +1,4 @@
-# Excel to SharePoint List Sync using PowerShell 🚀
+# Excel to SharePoint List Sync using PowerShell (Lookup Columns) 🚀
 
 This PowerShell script automates the process of importing data from a **local Excel file** 📊 into a **SharePoint Online List** 🌐. It reads data using the `Import-Excel` module, resolves **lookup columns**, and adds or updates list items in SharePoint via `PnP PowerShell`.
 
