@@ -1,3 +1,5 @@
+# Demo-1
+
 # Import Excel data
 $ExcelFilePath = "C:\Users\User\Documents\data.xlsx"
 $ExcelData = Import-Excel -Path $ExcelFilePath
@@ -23,3 +25,75 @@ foreach ($row in $ExcelData) {
         "Payment" = $PaymentId
     }
 }
+
+# Demo-2
+
+# 1)....Install Required Modules --
+
+Install-Module -Name PnP.PowerShell -Force -Scope CurrentUser
+
+# 2)...Connect to SharePoint ---
+Connect-PnPOnline -Url "https://futurrizoninterns.sharepoint.com/sites/Company'sFinancial" -UseWebLogin
+
+
+# 3).. verify connected site
+
+Get-PnPWeb
+
+# 4)...Load Excel File and Read Data
+
+$ExcelFilePath = "C:\Users\91915\Downloads\Data 1.xlsx"
+$ExcelData = Import-Excel -Path $ExcelFilePath
+
+# 5).. verify the excel data
+
+$ExcelData | Select-Object -First 5
+
+# 6)...Import Data to SharePoint List
+
+# SharePoint list name
+$ListName = "MainList"
+
+
+foreach ($Row in $excelData) {
+
+    
+    $Title = $Row.'Expense ID';
+    $ExpenseCategory = $Row.'Expense Category';
+    $BudgetAllocated = [decimal]$Row.'Budget Allocated ($)'
+    $BudgetUtilization = $Row.'Budget Utilization(%)';
+    $PaymentMethod = $Row.'Payment Method';
+    $Status = $Row.Status;
+    $Department = $Row.Department;
+    $EmployeeID = $Row.'Employee ID';
+  
+    # Get the Department ID from the DepartmentList 
+    # "DepartmentList" is a MasterList or say Lookup Field List, so we need to get the ID of the Department from this list and then use it in the main list
+    # {     $Department    } is the value from the excel sheet, we need to get the ID of this value from the "DepartmentList" list and then use it in the main list
+    $departmentId = (Get-PnPListItem -List "DepartmentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Department</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
+    $expenseCategoryId = (Get-PnPListItem -List "ExpenseCategoryList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$ExpenseCategory</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
+    $paymentId = (Get-PnPListItem -List "PaymentMethodList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$PaymentMethod</Value></Eq></Where></Query></View>").FieldValues["ID"]
+       
+    $StatusId = (Get-PnPListItem -List "Status" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Status</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
+    # Add the item to the list using the values from the excel sheet and the IDs from the lookup lists 
+    # Add-PnPListItem means we are adding a new item to the list.
+    Add-PnPListItem -List $listName -Values @{
+        "Title"             = $Title
+        "ExpenseCategory"   = $expenseCategoryId
+        "BudgetAllocated"   = $BudgetAllocated
+        "BudgetUtilization" = $BudgetUtilization
+        "PaymentMethod"     = $paymentId
+        "Status"            = $StatusId
+        "Department"        = $departmentId
+        "EmployeeID"        = $EmployeeID		
+
+    }
+}
+
+# 7)... Clean Up and Disconnect
+
+# Disconnect from SharePoint
+Disconnect-PnPOnline
