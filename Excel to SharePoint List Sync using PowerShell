@@ -83,13 +83,23 @@ foreach ($Row in $excelData) {
   $EmployeeName = $Row.'Employee Name';
   $EmployeeID = $Row.'Employee ID';
 
+  
+  # Get the Department ID from the DepartmentList 
+  # "DepartmentList" is a MasterList or say Lookup Field List, so we need to get the ID of the Department from this list and then use it in the main list
+  # {     $Department    } is the value from the excel sheet, we need to get the ID of this value from the "DepartmentList" list and then use it in the main list
+
+  $departmentId = (Get-PnPListItem -List "DepartmentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Department</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
   $expenseCategoryId = (Get-PnPListItem -List "ExpenseCategoryList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$ExpenseCategory</Value></Eq></Where></Query></View>").FieldValues["ID"]
 
   $paymentId = (Get-PnPListItem -List "PaymentMethodList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$PaymentMethod</Value></Eq></Where></Query></View>").FieldValues["ID"]
    
   $StatusId = (Get-PnPListItem -List "Status" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Status</Value></Eq></Where></Query></View>").FieldValues["ID"]
 
-  $departmentId = (Get-PnPListItem -List "DepartmentList" -Query "<View><Query><Where><Eq><FieldRef Name='Title'/><Value Type='Text'>$Department</Value></Eq></Where></Query></View>").FieldValues["ID"]
+
+
+  # Add the item to the list using the values from the excel sheet and the IDs from the lookup lists 
+  # Add-PnPListItem means we are adding a new item to the list.
 
   Add-PnPListItem -List $listName -Values @{
     "Title"                 = $Title
