@@ -63,7 +63,7 @@ foreach ($row in $ExcelData) {
 }
 ```
 
-## Example Search Tags for GitHub🔍
+## GitHub Tags🔍
 - `PowerShell SharePoint Automation`  
 - `Excel to SharePoint List Upload`  
 - `PnP PowerShell Import Data`  
